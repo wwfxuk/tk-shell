@@ -5,8 +5,8 @@ Usage:
 
 .. code-block:: bash
 
-   pip install nox
-   nox
+    pip install nox
+    nox
 
 If using rez and already installed nox using ``rez-pip``: ``rez env nox -- nox``
 """
@@ -19,7 +19,9 @@ import nox
 
 @nox.session(reuse_venv=True, venv_backend="venv")
 def tests(session):
-    """Test comamnd name replacement logic."""
+    """Test comamnd name replacement logic.
+
+    These paths are all relative to the repository's root folder.
+    """
     session.install("-r", os.path.join("tests", "requirements.txt"))
-    session.env["TK_DEBUG"] = "1"
-    session.run("pytest", os.path.join("tests", "test_replacements.py"))
+    session.run("pytest", os.path.join("tests", "unit", "test_replacements.py"))
