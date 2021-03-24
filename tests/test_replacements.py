@@ -10,19 +10,51 @@ import importlib.util
 import logging
 from pathlib import Path
 import sys
-from unittest.mock import DEFAULT, Mock, MagicMock, patch
+from typing import Union
+from unittest.mock import Mock, MagicMock
 
-from pytest import MonkeyPatch
+import pytest
 
 
-TEST_CASES = [
-    {
-        "commands": {"Katana 4.0.2": {"properties": {"short_name": "katana_4.0.2"}}},
-        "replaced_commands_names": {"katana_4.0.2": "katana"},
-        "expected": {"Katana 4.0.2": "katana"},
-    },
-    {
-        "commands": {
+PASSING_CASES = [
+    pytest.param(
+        {"Katana 4.0.2": {"properties": {"short_name": "katana_4.0.2"}}},
+        {"katana_4.0.2": "katana"},
+        {"Katana 4.0.2": "katana"},
+        id="basic",
+    ),
+    pytest.param(
+        {"setup_folders": {"properties": {"short_name": "setup_folders"}}},
+        {"katana_4.0.2": "katana"},
+        {},
+        id="no_matching_commands",
+    ),
+    pytest.param(
+        {},
+        {"katana_4.0.2": "katana"},
+        {},
+        id="no_commands",
+    ),
+    pytest.param(
+        {"setup_folders": {"properties": {"short_name": "setup_folders"}}},
+        {},
+        {},
+        id="nothing_to_rename",
+    ),
+    pytest.param(
+        {
+            "katana_3.6": {"properties": {"short_name": "katana_3.6"}},
+            "Katana 4.0.2": {"properties": {"short_name": "katana_4.0.2"}},
+        },
+        {
+            "katana_4.0.2": "katana",
+            "katana_3.6": "katana",
+        },
+        {},
+        id="empty_upon_clash",
+    ),
+    pytest.param(
+        {
             "katana_3.6": {"properties": {"short_name": "katana_3.6"}},
             "Jump to Screening Room in RV": {
                 "properties": {"short_name": "screening_room_rv"}
@@ -37,23 +69,25 @@ TEST_CASES = [
             "mari": {"properties": {"short_name": "mari"}},
             "Open Log Folder": {"properties": {"short_name": "open_log_folder"}},
         },
-        "replaced_commands_names": {
+        {
             "katana_3.6": "katana3",
             "screening_room_rv": "rv",
             "katana_4.0.2": "katana",
             "open_log_folder": "logs",
         },
-        "expected": {
+        {
             "katana_3.6": "katana3",
             "Jump to Screening Room in RV": "rv",
             "katana_4.0.2": "katana",
             "Open Log Folder": "logs",
         },
-    },
+        id="production",
+    ),
 ]
 
 
-def import_file(module_name, path):
+def import_file(module_name: str, path: Union[str, Path]):
+    """Used to import a file directly as a module."""
     full_path = Path(__file__).parent.parent / path
     spec = importlib.util.spec_from_file_location(module_name, full_path)
     module = importlib.util.module_from_spec(spec)
@@ -62,15 +96,16 @@ def import_file(module_name, path):
     return module
 
 
-def test_basic():
-    engine = import_file("engine", "engine.py")
+engine = import_file("engine", "engine.py")
 
-    for test_case in TEST_CASES:
-        mocked_engine_instance = MagicMock()
-        mocked_engine_instance.logger = Mock(spec_set=logging.getLoggerClass())
-        mocked_engine_instance.commands = test_case["commands"]
 
-        results = engine.ShellEngine.validated_name_replacements(
-            mocked_engine_instance, test_case["replaced_commands_names"]
-        )
-        assert results == test_case["expected"]
+@pytest.mark.parametrize("commands,replaced_commands_names,expected", PASSING_CASES)
+def test_valid_validated_name_replacements(commands, replaced_commands_names, expected):
+    """Isolate and check the dictionary processing logic."""
+    instance = MagicMock()
+    instance.logger = Mock(spec_set=logging.getLoggerClass())
+    instance.commands = commands
+
+    assert expected == engine.ShellEngine.validated_name_replacements(
+        instance, replaced_commands_names
+    )
