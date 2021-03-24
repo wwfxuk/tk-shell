@@ -13,6 +13,7 @@ Implements the Terminal Engine in Tank, e.g the a way to run apps inside of a
 standard python terminal session.
 """
 
+import collections
 import tank
 import inspect
 import logging
@@ -61,10 +62,59 @@ class ShellEngine(Engine):
 
         super(ShellEngine, self).__init__(*args, **kwargs)
 
-    def init_engine(self):
+    def post_app_init(self):
         """
         Init
         """
+        requested = self.get_setting("replaced_commands_names", default={})
+        replacements = self.validated_name_replacements(requested)
+        for command_key, new_name in replacements.items():
+            self.logger.debug(
+                'Patching commands["%s"]["properties"]["short_name"] to: "%s"',
+                command_key,
+                new_name,
+            )
+            self.commands[command_key]["properties"]["short_name"] = new_name
+
+    def validated_name_replacements(self, requested):
+        """Calculate the final name replacements to perform.
+
+        Returns:
+            dict: Command key names mapped to new shot names, if any.
+        """
+        replacements = {}
+        current_names = {}
+        new_from_originals = collections.defaultdict(set)
+
+        for original_name, new_name in requested.items():
+            new_from_originals[new_name].add(original_name)
+        self.logger.debug("Initial new_from_originals: %s", new_from_originals)
+
+        for key, info in self.commands.items():
+            original_name = info.get("properties", {}).get("short_name")
+            if original_name:
+                current_names[original_name] = key
+
+                if original_name not in requested:
+                    new_from_originals[original_name].add(original_name)
+
+        self.logger.debug("Final current_names: %s", current_names)
+        self.logger.debug("Final new_from_originals: %s", new_from_originals)
+
+        for new_name, original_names in sorted(new_from_originals.items()):
+            if len(original_names) > 1:
+                self.logger.warn(
+                    'IGNORING creating new "%s" command name from 2 or more '
+                    'clashing, original names: "%s"',
+                    new_name,
+                    '", "'.join(map(str, original_names)),
+                )
+            else:
+                command_key = current_names.get(list(original_names)[0])
+                if command_key:
+                    replacements[command_key] = new_name
+
+        return replacements
 
     def destroy_engine(self):
         """

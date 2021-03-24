@@ -33,27 +33,13 @@ def import_file(module_name, path):
     return module
 
 
-def mocked_engine(test_case):
-    engine = import_file("engine", "engine.py")
-
-    def get_settings_side_effect(name, default=None):
-        if name == "replaced_commands_names":
-            return test_case["replaced_commands_names"]
-        return DEFAULT
-
-    with patch("engine.ShellEngine") as mocked_engine_def:
-        instance = mocked_engine_def.return_value
-        instance.logger = Mock(spec_set=logging.getLoggerClass())
-        instance.commands.return_value = test_case["commands"]
-
-
 def test_basic():
     engine = import_file("engine", "engine.py")
 
     for test_case in TEST_CASES:
         mocked_engine_instance = MagicMock()
         mocked_engine_instance.logger = Mock(spec_set=logging.getLoggerClass())
-        mocked_engine_instance.commands.return_value = test_case["commands"]
+        mocked_engine_instance.commands = test_case["commands"]
 
         results = engine.ShellEngine.validated_name_replacements(
             mocked_engine_instance, test_case["replaced_commands_names"]
