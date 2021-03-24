@@ -12,6 +12,31 @@
 
 # expected fields in the configuration file for this engine
 configuration:
+  replaced_commands_names:
+    type: dict
+    allows_empty: True
+    default_value: {}
+    description: |
+      Mapping of original engine command names, as seen from running "tank"
+      command, to new command names.
+
+      This is to make running tank CMD much more friendly than the default,
+      auto-generated "short_name" from the various apps.
+      
+      As an example, we can define it once in "project" as a YAML anchor and
+      then have other contexts use the same "replaced_commands_names" settings:
+
+        settings.tk-shell.project:
+          replaced_commands_names: &replacements
+            old_name_from_tank_command: new_name
+            katana_4.0.2: katana
+            publish: publish_in_place
+
+        settings.tk-shell.asset:
+          replaced_commands_names: *replacements
+
+        settings.tk-shell.shot_step:
+          replaced_commands_names: *replacements
 
 # the Shotgun fields that this engine needs in order to operate correctly
 requires_shotgun_fields:
