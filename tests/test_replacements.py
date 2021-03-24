@@ -21,6 +21,35 @@ TEST_CASES = [
         "replaced_commands_names": {"katana_4.0.2": "katana"},
         "expected": {"Katana 4.0.2": "katana"},
     },
+    {
+        "commands": {
+            "katana_3.6": {"properties": {"short_name": "katana_3.6"}},
+            "Jump to Screening Room in RV": {
+                "properties": {"short_name": "screening_room_rv"}
+            },
+            "Jump to Screening Room Web Player": {
+                "properties": {"short_name": "screening_room_web"}
+            },
+            "katana_4.0.2": {"properties": {"short_name": "katana_4.0.2"}},
+            "Shotgun Toolkit Demos": {"properties": {"short_name": "demos"}},
+            "Publish in-place...": {"properties": {"short_name": "publish_in_place"}},
+            "setup_folders": {"properties": {"short_name": "setup_folders"}},
+            "mari": {"properties": {"short_name": "mari"}},
+            "Open Log Folder": {"properties": {"short_name": "open_log_folder"}},
+        },
+        "replaced_commands_names": {
+            "katana_3.6": "katana3",
+            "screening_room_rv": "rv",
+            "katana_4.0.2": "katana",
+            "open_log_folder": "logs",
+        },
+        "expected": {
+            "katana_3.6": "katana3",
+            "Jump to Screening Room in RV": "rv",
+            "katana_4.0.2": "katana",
+            "Open Log Folder": "logs",
+        },
+    },
 ]
 
 

@@ -20,10 +20,14 @@ import logging
 import sys
 import os
 import platform
+import time
 
 from tank_vendor import six
 from tank.platform import Engine
 from tank import TankError
+
+
+print("tk-shell: %s" % os.getpid())
 
 
 class ShellEngine(Engine):
@@ -33,6 +37,7 @@ class ShellEngine(Engine):
 
     def __init__(self, *args, **kwargs):
         # passthrough so we can init stuff
+        time.sleep(5)
 
         # the has_qt flag indicates that the QT subsystem is present and can be started
         self._has_qt = False
@@ -75,6 +80,7 @@ class ShellEngine(Engine):
                 new_name,
             )
             self.commands[command_key]["properties"]["short_name"] = new_name
+        print()
 
     def validated_name_replacements(self, requested):
         """Calculate the final name replacements to perform.
@@ -110,8 +116,9 @@ class ShellEngine(Engine):
                     '", "'.join(map(str, original_names)),
                 )
             else:
-                command_key = current_names.get(list(original_names)[0])
-                if command_key:
+                original_name = list(original_names)[0]
+                command_key = current_names.get(original_name)
+                if original_name != new_name and command_key:
                     replacements[command_key] = new_name
 
         return replacements
