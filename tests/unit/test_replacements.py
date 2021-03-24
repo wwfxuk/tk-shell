@@ -6,14 +6,12 @@ Test in Python 3.7
 
 from __future__ import absolute_import, division, print_function
 
-import importlib.util
 import logging
-from pathlib import Path
-import sys
-from typing import Union
 from unittest.mock import Mock, MagicMock
 
 import pytest
+
+from ..imports import engine
 
 
 PASSING_CASES = [
@@ -84,19 +82,6 @@ PASSING_CASES = [
         id="production",
     ),
 ]
-
-
-def import_file(module_name: str, path: Union[str, Path]):
-    """Used to import a file directly as a module."""
-    full_path = Path(__file__).parent.parent / path
-    spec = importlib.util.spec_from_file_location(module_name, full_path)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[module_name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-engine = import_file("engine", "engine.py")
 
 
 @pytest.mark.parametrize("commands,replaced_commands_names,expected", PASSING_CASES)
