@@ -20,14 +20,10 @@ import logging
 import sys
 import os
 import platform
-import time
 
 from tank_vendor import six
 from tank.platform import Engine
 from tank import TankError
-
-
-print("tk-shell: %s" % os.getpid())
 
 
 class ShellEngine(Engine):
@@ -37,7 +33,6 @@ class ShellEngine(Engine):
 
     def __init__(self, *args, **kwargs):
         # passthrough so we can init stuff
-        time.sleep(5)
 
         # the has_qt flag indicates that the QT subsystem is present and can be started
         self._has_qt = False
@@ -68,9 +63,7 @@ class ShellEngine(Engine):
         super(ShellEngine, self).__init__(*args, **kwargs)
 
     def post_app_init(self):
-        """
-        Init
-        """
+        """Perform any command name replacements as necessary."""
         requested = self.get_setting("replaced_commands_names", default={})
         replacements = self.validated_name_replacements(requested)
         for command_key, new_name in replacements.items():
@@ -80,10 +73,15 @@ class ShellEngine(Engine):
                 new_name,
             )
             self.commands[command_key]["properties"]["short_name"] = new_name
-        print()
 
     def validated_name_replacements(self, requested):
         """Calculate the final name replacements to perform.
+
+        If any clashes for destination name occurs, a warning will be logged
+        and that specific rename action will not occur.
+
+        Args:
+            requested (dict): Old names mapped to new names to replace with.
 
         Returns:
             dict: Command key names mapped to new shot names, if any.
